@@ -1,33 +1,56 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Sparkles, ShieldCheck } from 'lucide-react';
+import type { FormEvent } from 'react';
+import { Navigate } from 'react-router-dom';
+import { Loader2, ShieldCheck, Sparkles } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export function Login() {
-  const [username, setUsername] = useState('');
-  const [house, setHouse] = useState('Grifinória');
-  const [wand, setWand] = useState('');
-  const navigate = useNavigate();
+  const { user, loading: checkingSession, login } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = (event: React.FormEvent) => {
+  async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setSubmitting(true);
+    setError(null);
 
-    if (!username.trim()) {
-      alert('Informe seu nome de bruxo!');
-      return;
+    try {
+      await login({ email: email.trim(), password });
+    } catch (loginError) {
+      setError(
+        loginError instanceof Error
+          ? loginError.message
+          : 'Não foi possível realizar o login.'
+      );
+    } finally {
+      setSubmitting(false);
     }
+  }
 
-    const userData = {
-      username: username.trim(),
-      house,
-      wand: wand || 'Madeira de Salgueiro com Fibra de Coração de Dragão'
-    };
+  if (checkingSession) {
+    return (
+      <div
+        role="status"
+        style={{
+          padding: '5rem',
+          textAlign: 'center',
+          color: 'var(--color-lavender)'
+        }}
+      >
+        <Loader2 className="animate-spin" size={32} />
+        <p>Verificando sua sessão...</p>
+      </div>
+    );
+  }
 
-    localStorage.setItem('hogwarts_user', JSON.stringify(userData));
-    navigate('/home');
-  };
+  if (user) {
+    return <Navigate to="/home" replace />;
+  }
 
   return (
-    <div
+    <main
       style={{
         maxWidth: '420px',
         margin: '4rem auto',
@@ -38,7 +61,7 @@ export function Login() {
         boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)'
       }}
     >
-      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+      <header style={{ textAlign: 'center', marginBottom: '2rem' }}>
         <div
           style={{
             width: '60px',
@@ -55,14 +78,20 @@ export function Login() {
           <Sparkles color="var(--color-lavender)" size={28} />
         </div>
 
-        <h1 style={{ color: '#fff', fontSize: '1.6rem', marginBottom: '0.4rem' }}>
+        <h1
+          style={{
+            color: '#fff',
+            fontSize: '1.6rem',
+            marginBottom: '0.4rem'
+          }}
+        >
           Acesso ao Sistema
         </h1>
 
         <p style={{ color: 'var(--color-lavender)', fontSize: '0.85rem' }}>
-          Acesso Acadêmico de Hogwarts
+          Entre com uma conta previamente cadastrada.
         </p>
-      </div>
+      </header>
 
       <form
         onSubmit={handleLogin}
@@ -70,7 +99,7 @@ export function Login() {
       >
         <div>
           <label
-            htmlFor="username"
+            htmlFor="email"
             style={{
               display: 'block',
               marginBottom: '0.4rem',
@@ -79,15 +108,17 @@ export function Login() {
               fontWeight: 600
             }}
           >
-            Nome do Estudante / Bruxo:
+            E-mail
           </label>
 
           <input
-            id="username"
-            type="text"
+            id="email"
+            type="email"
+            autoComplete="username"
             required
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
+            maxLength={190}
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
             style={{
               width: '100%',
               padding: '0.75rem 1rem',
@@ -98,13 +129,13 @@ export function Login() {
               fontSize: '0.9rem',
               boxSizing: 'border-box'
             }}
-            placeholder="Ex.: Harry Potter"
+            placeholder="seu.email@exemplo.com"
           />
         </div>
 
         <div>
           <label
-            htmlFor="house"
+            htmlFor="password"
             style={{
               display: 'block',
               marginBottom: '0.4rem',
@@ -113,13 +144,18 @@ export function Login() {
               fontWeight: 600
             }}
           >
-            Casa de Hogwarts:
+            Senha
           </label>
 
-          <select
-            id="house"
-            value={house}
-            onChange={(event) => setHouse(event.target.value)}
+          <input
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            required
+            minLength={8}
+            maxLength={128}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
             style={{
               width: '100%',
               padding: '0.75rem 1rem',
@@ -127,51 +163,29 @@ export function Login() {
               border: '1px solid var(--border-color)',
               color: '#fff',
               borderRadius: '8px',
+              fontSize: '0.9rem',
+              boxSizing: 'border-box'
+            }}
+            placeholder="Digite sua senha"
+          />
+        </div>
+
+        {error && (
+          <p
+            role="alert"
+            style={{
+              margin: 0,
+              color: '#ff8080',
               fontSize: '0.9rem'
             }}
           >
-            <option value="Grifinória">Grifinória</option>
-            <option value="Sonserina">Sonserina</option>
-            <option value="Corvinal">Corvinal</option>
-            <option value="Lufa-Lufa">Lufa-Lufa</option>
-          </select>
-        </div>
-
-        <div>
-          <label
-            htmlFor="wand"
-            style={{
-              display: 'block',
-              marginBottom: '0.4rem',
-              color: 'var(--text-primary)',
-              fontSize: '0.85rem',
-              fontWeight: 600
-            }}
-          >
-            Especificação da Varinha:
-          </label>
-
-          <input
-            id="wand"
-            type="text"
-            value={wand}
-            onChange={(event) => setWand(event.target.value)}
-            style={{
-              width: '100%',
-              padding: '0.75rem 1rem',
-              backgroundColor: 'var(--color-navy)',
-              border: '1px solid var(--border-color)',
-              color: '#fff',
-              borderRadius: '8px',
-              fontSize: '0.9rem',
-              boxSizing: 'border-box'
-            }}
-            placeholder="Ex.: Teixo com Núcleo de Fênix"
-          />
-        </div>
+            {error}
+          </p>
+        )}
 
         <button
           type="submit"
+          disabled={submitting}
           style={{
             backgroundColor: 'var(--color-blue)',
             color: '#fff',
@@ -179,19 +193,24 @@ export function Login() {
             fontWeight: 600,
             border: 'none',
             borderRadius: '8px',
-            cursor: 'pointer',
+            cursor: submitting ? 'wait' : 'pointer',
             marginTop: '0.5rem',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
             gap: '0.5rem',
-            fontSize: '0.95rem'
+            fontSize: '0.95rem',
+            opacity: submitting ? 0.7 : 1
           }}
         >
-          <ShieldCheck size={18} />
-          Acessar Sistema
+          {submitting ? (
+            <Loader2 className="animate-spin" size={18} />
+          ) : (
+            <ShieldCheck size={18} />
+          )}
+          {submitting ? 'Entrando...' : 'Acessar Sistema'}
         </button>
       </form>
-    </div>
+    </main>
   );
 }

@@ -76,9 +76,11 @@ export async function remove(
   request: FastifyRequest<{ Params: Params }>,
   reply: FastifyReply
 ) {
-  const removed = await scheduleService.deleteSchedule(request.params.id);
+  const removedClass = await scheduleService.deleteSchedule(
+    request.params.id
+  );
 
-  if (!removed) {
+  if (!removedClass) {
     return reply
       .status(404)
       .send({ error: 'Aula não encontrada para remoção.' });

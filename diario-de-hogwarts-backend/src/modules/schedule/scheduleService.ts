@@ -1,4 +1,5 @@
 import type { ScheduleClass } from '../../data/scheduleData.js';
+import { recordScheduleHistory } from '../scheduleHistory/scheduleHistoryRepository.js';
 import * as scheduleRepository from './scheduleRepository.js';
 
 export interface ScheduleInput {
@@ -49,7 +50,15 @@ export async function createSchedule(
     ...input
   };
 
-  return scheduleRepository.create(newClass);
+  const createdClass = await scheduleRepository.create(newClass);
+
+  await recordScheduleHistory({
+    scheduleId: createdClass.id,
+    action: 'created',
+    snapshot: createdClass
+  });
+
+  return createdClass;
 }
 
 export async function updateSchedule(
@@ -68,9 +77,41 @@ export async function updateSchedule(
     id
   };
 
-  return scheduleRepository.update(id, updatedClass);
+  const savedClass = await scheduleRepository.update(id, updatedClass);
+
+  if (!savedClass) {
+    return undefined;
+  }
+
+  await recordScheduleHistory({
+    scheduleId: savedClass.id,
+    action: 'updated',
+    snapshot: savedClass
+  });
+
+  return savedClass;
 }
 
-export async function deleteSchedule(id: string): Promise<boolean> {
-  return scheduleRepository.remove(id);
+export async function deleteSchedule(
+  id: string
+): Promise<ScheduleClass | undefined> {
+  const currentClass = await scheduleRepository.findById(id);
+
+  if (!currentClass) {
+    return undefined;
+  }
+
+  const removed = await scheduleRepository.remove(id);
+
+  if (!removed) {
+    return undefined;
+  }
+
+  await recordScheduleHistory({
+    scheduleId: currentClass.id,
+    action: 'deleted',
+    snapshot: currentClass
+  });
+
+  return currentClass;
 }

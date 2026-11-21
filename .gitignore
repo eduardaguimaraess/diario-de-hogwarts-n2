@@ -34,6 +34,7 @@ coverage/
 
 # Arquivos de ambiente
 .env
+atlas-credentials.env
 .env.*
 !.env.example
 

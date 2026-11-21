@@ -1,34 +1,69 @@
 import type { FastifyInstance } from 'fastify';
+import {
+  requireAuthentication,
+  requireTeacher
+} from '../modules/auth/authGuards.js';
 import * as scheduleController from '../modules/schedule/scheduleController.js';
+import type {
+  PaginationInput,
+  ScheduleInput
+} from '../modules/schedule/scheduleService.js';
 import {
   createScheduleSchema,
   paginationSchema,
   updateScheduleSchema
 } from '../modules/schedule/scheduleSchemas.js';
 
-export async function scheduleRoutes(fastify: FastifyInstance) {
-  fastify.get('/schedule', scheduleController.list);
+interface ScheduleParams {
+  id: string;
+}
 
-  // Deve ficar antes de /schedule/:id para "paginated" não ser tratado como ID.
+export async function scheduleRoutes(fastify: FastifyInstance) {
   fastify.get(
+    '/schedule',
+    { preHandler: requireAuthentication },
+    scheduleController.list
+  );
+
+  fastify.get<{ Querystring: PaginationInput }>(
     '/schedule/paginated',
-    { schema: paginationSchema },
+    {
+      schema: paginationSchema,
+      preHandler: requireAuthentication
+    },
     scheduleController.listPaginated
   );
 
-  fastify.get('/schedule/:id', scheduleController.getById);
+  fastify.get<{ Params: ScheduleParams }>(
+    '/schedule/:id',
+    { preHandler: requireAuthentication },
+    scheduleController.getById
+  );
 
-  fastify.post(
+  fastify.post<{ Body: ScheduleInput }>(
     '/schedule',
-    { schema: createScheduleSchema },
+    {
+      schema: createScheduleSchema,
+      preHandler: requireTeacher
+    },
     scheduleController.create
   );
 
-  fastify.put(
+  fastify.put<{
+    Params: ScheduleParams;
+    Body: Partial<ScheduleInput>;
+  }>(
     '/schedule/:id',
-    { schema: updateScheduleSchema },
+    {
+      schema: updateScheduleSchema,
+      preHandler: requireTeacher
+    },
     scheduleController.update
   );
 
-  fastify.delete('/schedule/:id', scheduleController.remove);
+  fastify.delete<{ Params: ScheduleParams }>(
+    '/schedule/:id',
+    { preHandler: requireTeacher },
+    scheduleController.remove
+  );
 }

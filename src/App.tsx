@@ -1,31 +1,165 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import type { PropsWithChildren } from 'react';
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes
+} from 'react-router-dom';
 import { Navbar } from './components/Navbar';
-import { Login } from './pages/Login';
-import { Home } from './pages/Home';
-import { Spells } from './pages/Spells';
-import { SpellDetail } from './pages/SpellDetail';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Favorites } from './pages/Favorites';
-import { Schedule } from './pages/Schedule';
-import { SchedulePaginated } from './pages/SchedulePaginated';
+import { Home } from './pages/Home';
+import { Login } from './pages/Login';
 import { Potions } from './pages/Potions';
+import { Schedule } from './pages/Schedule';
+import { ScheduleHistory } from './pages/ScheduleHistory';
+import { SchedulePaginated } from './pages/SchedulePaginated';
+import { ScheduleStudent } from './pages/ScheduleStudent';
+import { SpellDetail } from './pages/SpellDetail';
+import { Spells } from './pages/Spells';
+
+function RequireAuthentication({ children }: PropsWithChildren) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div
+        role="status"
+        style={{
+          padding: '4rem',
+          textAlign: 'center',
+          color: 'var(--color-lavender)'
+        }}
+      >
+        Verificando sua sessão...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+}
+
+function RequireTeacher({ children }: PropsWithChildren) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div
+        role="status"
+        style={{
+          padding: '4rem',
+          textAlign: 'center',
+          color: 'var(--color-lavender)'
+        }}
+      >
+        Verificando suas permissões...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (user.role !== 'teacher') {
+    return <Navigate to="/home" replace />;
+  }
+
+  return children;
+}
+
+function ScheduleByRole() {
+  const { user } = useAuth();
+
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
+  return user.role === 'teacher' ? <Schedule /> : <ScheduleStudent />;
+}
 
 export function App() {
   return (
-    <BrowserRouter>
-      <Navbar />
+    <AuthProvider>
+      <BrowserRouter>
+        <Navbar />
 
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/spells" element={<Spells />} />
-        <Route path="/spells/:id" element={<SpellDetail />} />
-        <Route path="/favorites" element={<Favorites />} />
-        <Route path="/schedule" element={<Schedule />} />
-        <Route path="/schedule/search" element={<SchedulePaginated />} />
-        <Route path="/potions" element={<Potions />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Login />} />
+
+          <Route
+            path="/home"
+            element={
+              <RequireAuthentication>
+                <Home />
+              </RequireAuthentication>
+            }
+          />
+          <Route
+            path="/spells"
+            element={
+              <RequireAuthentication>
+                <Spells />
+              </RequireAuthentication>
+            }
+          />
+          <Route
+            path="/spells/:id"
+            element={
+              <RequireAuthentication>
+                <SpellDetail />
+              </RequireAuthentication>
+            }
+          />
+          <Route
+            path="/favorites"
+            element={
+              <RequireAuthentication>
+                <Favorites />
+              </RequireAuthentication>
+            }
+          />
+          <Route
+            path="/schedule"
+            element={
+              <RequireAuthentication>
+                <ScheduleByRole />
+              </RequireAuthentication>
+            }
+          />
+          <Route
+            path="/schedule/search"
+            element={
+              <RequireAuthentication>
+                <SchedulePaginated />
+              </RequireAuthentication>
+            }
+          />
+          <Route
+            path="/schedule/history"
+            element={
+              <RequireTeacher>
+                <ScheduleHistory />
+              </RequireTeacher>
+            }
+          />
+          <Route
+            path="/potions"
+            element={
+              <RequireAuthentication>
+                <Potions />
+              </RequireAuthentication>
+            }
+          />
+
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

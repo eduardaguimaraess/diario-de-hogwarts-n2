@@ -1,28 +1,29 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   BookOpen,
-  Home,
-  LogOut,
-  Shield,
   BookmarkCheck,
   Calendar,
   FlaskConical,
-  Search
+  History,
+  Home,
+  LogOut,
+  Search,
+  Shield
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export function Navbar() {
+  const { user, loading, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const userJson = localStorage.getItem('hogwarts_user');
-  const user = userJson ? JSON.parse(userJson) : null;
 
-  const handleLogout = () => {
-    localStorage.removeItem('hogwarts_user');
-    navigate('/');
-  };
-
-  if (!user) {
+  if (loading || !user) {
     return null;
+  }
+
+  async function handleLogout() {
+    await logout();
+    navigate('/');
   }
 
   const isActive = (path: string) => location.pathname === path;
@@ -82,7 +83,6 @@ export function Navbar() {
           <h2 style={{ margin: 0, color: '#fff', fontSize: '1.2rem' }}>
             Diário de Hogwarts
           </h2>
-
           <span
             style={{
               fontSize: '0.75rem',
@@ -132,6 +132,16 @@ export function Navbar() {
           <Search size={16} />
           Buscar aulas
         </Link>
+
+        {user.role === 'teacher' && (
+          <Link
+            to="/schedule/history"
+            style={linkStyle('/schedule/history')}
+          >
+            <History size={16} />
+            Histórico
+          </Link>
+        )}
       </nav>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
@@ -147,14 +157,17 @@ export function Navbar() {
           }}
         >
           <Shield size={16} color="var(--color-lavender)" />
-
           <span style={{ fontSize: '0.85rem', color: '#fff' }}>
-            <strong>{user.username}</strong> |{' '}
-            <span style={{ color: 'var(--color-lavender)' }}>{user.house}</span>
+            <strong>{user.name}</strong>
+            {' | '}
+            <span style={{ color: 'var(--color-lavender)' }}>
+              {user.role === 'teacher' ? 'Professor' : user.house ?? 'Aluno'}
+            </span>
           </span>
         </div>
 
         <button
+          type="button"
           onClick={handleLogout}
           style={{
             backgroundColor: 'rgba(231, 76, 60, 0.15)',

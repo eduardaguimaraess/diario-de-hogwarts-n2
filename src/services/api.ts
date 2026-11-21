@@ -17,19 +17,27 @@ export interface PaginatedScheduleResponse {
   totalPages: number;
 }
 
+async function backendFetch(
+  path: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  return fetch(`${BACKEND_URL}${path}`, {
+    ...options,
+    credentials: 'include'
+  });
+}
+
 async function getErrorMessage(
   response: Response,
   fallbackMessage: string
 ): Promise<string> {
   try {
-    const errorData = await response.json();
+    const errorData = (await response.json()) as { error?: string };
     return errorData.error || fallbackMessage;
   } catch {
     return fallbackMessage;
   }
 }
-
-// Chamadas à API pública Potter DB
 
 export async function getSpells(): Promise<Spell[]> {
   const response = await fetch(`${POTTER_DB_URL}/spells?page[size]=100`);
@@ -64,10 +72,8 @@ export async function getPotions(): Promise<Potion[]> {
   return data.data;
 }
 
-// Chamadas ao backend Fastify
-
 export async function getSchedule(): Promise<ScheduleClass[]> {
-  const response = await fetch(`${BACKEND_URL}/schedule`);
+  const response = await backendFetch('/schedule');
 
   if (!response.ok) {
     throw new Error('Não foi possível carregar as aulas.');
@@ -87,8 +93,8 @@ export async function getPaginatedSchedule(
     search
   });
 
-  const response = await fetch(
-    `${BACKEND_URL}/schedule/paginated?${query.toString()}`
+  const response = await backendFetch(
+    `/schedule/paginated?${query.toString()}`
   );
 
   if (!response.ok) {
@@ -101,7 +107,7 @@ export async function getPaginatedSchedule(
 export async function createScheduleClass(
   data: Omit<ScheduleClass, 'id'>
 ): Promise<ScheduleClass> {
-  const response = await fetch(`${BACKEND_URL}/schedule`, {
+  const response = await backendFetch('/schedule', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -122,13 +128,16 @@ export async function updateScheduleClass(
   id: string,
   data: Partial<ScheduleClass>
 ): Promise<ScheduleClass> {
-  const response = await fetch(`${BACKEND_URL}/schedule/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(data)
-  });
+  const response = await backendFetch(
+    `/schedule/${encodeURIComponent(id)}`,
+    {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    }
+  );
 
   if (!response.ok) {
     throw new Error(
@@ -140,9 +149,10 @@ export async function updateScheduleClass(
 }
 
 export async function deleteScheduleClass(id: string): Promise<void> {
-  const response = await fetch(`${BACKEND_URL}/schedule/${id}`, {
-    method: 'DELETE'
-  });
+  const response = await backendFetch(
+    `/schedule/${encodeURIComponent(id)}`,
+    { method: 'DELETE' }
+  );
 
   if (!response.ok) {
     throw new Error(
@@ -152,7 +162,7 @@ export async function deleteScheduleClass(id: string): Promise<void> {
 }
 
 export async function getCustomSpells(): Promise<CustomSpell[]> {
-  const response = await fetch(`${BACKEND_URL}/spells`);
+  const response = await backendFetch('/spells');
 
   if (!response.ok) {
     throw new Error('Falha ao buscar feitiços cadastrados no servidor.');
@@ -164,21 +174,25 @@ export async function getCustomSpells(): Promise<CustomSpell[]> {
 export async function createCustomSpell(
   spell: Omit<CustomSpell, 'id'>
 ): Promise<CustomSpell> {
-  const response = await fetch(`${BACKEND_URL}/spells`, {
+  const response = await backendFetch('/spells', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify(spell)
   });
 
   if (!response.ok) {
-    throw new Error('Falha ao cadastrar o feitiço no servidor.');
+    throw new Error(
+      await getErrorMessage(response, 'Falha ao cadastrar o feitiço no servidor.')
+    );
   }
 
   return response.json();
 }
 
 export async function getCustomPotions(): Promise<CustomPotion[]> {
-  const response = await fetch(`${BACKEND_URL}/potions`);
+  const response = await backendFetch('/potions');
 
   if (!response.ok) {
     throw new Error('Falha ao buscar poções do servidor.');
@@ -190,14 +204,18 @@ export async function getCustomPotions(): Promise<CustomPotion[]> {
 export async function createCustomPotion(
   potion: Omit<CustomPotion, 'id'>
 ): Promise<CustomPotion> {
-  const response = await fetch(`${BACKEND_URL}/potions`, {
+  const response = await backendFetch('/potions', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify(potion)
   });
 
   if (!response.ok) {
-    throw new Error('Falha ao registrar a poção no servidor.');
+    throw new Error(
+      await getErrorMessage(response, 'Falha ao registrar a poção no servidor.')
+    );
   }
 
   return response.json();
