@@ -87,7 +87,7 @@ O histórico guarda a ação, o horário e uma cópia dos dados da aula no momen
 
 As capturas dos fluxos principais estão em `evidencias/`: painéis de professor e aluno, select de professor no cadastro, aula na grade, persistência no MySQL, exclusão, histórico no MongoDB, busca paginada e conflito HTTP `409`.
 
-`13-medicao-filtro-frontend-console.png` registra o tempo do filtro executado no frontend. Para atender também à medição de requisição exigida no enunciado, falta uma captura da aba Network com uma requisição paginada selecionada e a duração visível. A captura `09-network-busca-200.png` registra método, URL e status `200`; complemente-a com a aba **Timing** ou com a coluna **Duration** visível. A medição do filtro no console é complementar e não substitui a duração HTTP no Network.
+`13-medicao-filtro-frontend-console.png` registra o tempo do filtro executado no frontend. A medição HTTP está registrada em `evidencias/14-network-busca-timing.png` e `evidencias/15-network-busca-headers.png`: a consulta paginada para “Poções” retornou `GET`, status `200` e duração total de `6,32 ms` nesse ambiente. A medição do filtro no console é complementar; a duração HTTP foi obtida na aba Network.
 
 ## Organização principal
 
