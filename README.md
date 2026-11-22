@@ -10,6 +10,8 @@ Projeto acadêmico desenvolvido para a disciplina de Programação para Sistemas
 - MongoDB: histórico de alterações da grade.
 - Backend organizado por funcionalidades, com separação entre rotas, controllers, services e repositories.
 
+A organização por funcionalidades foi escolhida porque o sistema possui áreas distintas, como autenticação, grade e histórico. Cada módulo mantém seu fluxo próximo, enquanto as camadas separam HTTP, regras de negócio e acesso aos bancos, facilitando manutenção e evolução sem concentrar responsabilidades no servidor.
+
 ## Requisitos
 
 - Node.js e npm.
