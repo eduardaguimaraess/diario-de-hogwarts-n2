@@ -3,6 +3,7 @@ import type {
   FastifyRequest
 } from 'fastify';
 import * as scheduleService from '../schedule/scheduleService.js';
+import { ScheduleConflictError } from '../schedule/scheduleConflictError.js';
 import type {
   PaginationInput,
   ScheduleInput
@@ -47,8 +48,16 @@ export async function create(
   request: FastifyRequest<{ Body: ScheduleInput }>,
   reply: FastifyReply
 ) {
-  const newClass = await scheduleService.createSchedule(request.body);
-  return reply.status(201).send(newClass);
+  try {
+    const newClass = await scheduleService.createSchedule(request.body);
+    return reply.status(201).send(newClass);
+  } catch (error) {
+    if (error instanceof ScheduleConflictError) {
+      return reply.status(409).send({ error: error.message });
+    }
+
+    throw error;
+  }
 }
 
 export async function update(
@@ -58,10 +67,22 @@ export async function update(
   }>,
   reply: FastifyReply
 ) {
-  const updatedClass = await scheduleService.updateSchedule(
-    request.params.id,
-    request.body
-  );
+  let updatedClass: Awaited<
+    ReturnType<typeof scheduleService.updateSchedule>
+  >;
+
+  try {
+    updatedClass = await scheduleService.updateSchedule(
+      request.params.id,
+      request.body
+    );
+  } catch (error) {
+    if (error instanceof ScheduleConflictError) {
+      return reply.status(409).send({ error: error.message });
+    }
+
+    throw error;
+  }
 
   if (!updatedClass) {
     return reply

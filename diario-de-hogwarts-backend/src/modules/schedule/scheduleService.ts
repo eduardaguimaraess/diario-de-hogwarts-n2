@@ -1,5 +1,6 @@
 import type { ScheduleClass } from '../../data/scheduleData.js';
 import { recordScheduleHistory } from '../scheduleHistory/scheduleHistoryRepository.js';
+import { ScheduleConflictError } from './scheduleConflictError.js';
 import * as scheduleRepository from './scheduleRepository.js';
 
 export interface ScheduleInput {
@@ -14,6 +15,44 @@ export interface PaginationInput {
   page: number;
   limit: number;
   search: string;
+}
+
+function normalizeConflictValue(value: string): string {
+  return value.trim().toLocaleLowerCase('pt-BR').replace(/\s+/g, '');
+}
+
+async function ensureNoScheduleConflict(
+  item: Pick<ScheduleClass, 'professor' | 'classroom' | 'time' | 'dayOfWeek'>,
+  excludedId?: string
+): Promise<void> {
+  const conflicts = await scheduleRepository.findConflicts(item, excludedId);
+  const normalizedProfessor = normalizeConflictValue(item.professor);
+  const normalizedClassroom = normalizeConflictValue(item.classroom);
+
+  const professorIsBusy = conflicts.some(
+    (conflict) =>
+      normalizeConflictValue(conflict.professor) === normalizedProfessor
+  );
+  const classroomIsBusy = conflicts.some(
+    (conflict) =>
+      normalizeConflictValue(conflict.classroom) === normalizedClassroom
+  );
+
+  if (!professorIsBusy && !classroomIsBusy) {
+    return;
+  }
+
+  const reasons: string[] = [];
+
+  if (professorIsBusy) {
+    reasons.push(`O professor ${item.professor} já possui aula nesse horário.`);
+  }
+
+  if (classroomIsBusy) {
+    reasons.push(`A sala ${item.classroom} já está ocupada nesse horário.`);
+  }
+
+  throw new ScheduleConflictError(reasons.join(' '));
 }
 
 export async function listSchedule(): Promise<ScheduleClass[]> {
@@ -50,6 +89,8 @@ export async function createSchedule(
     ...input
   };
 
+  await ensureNoScheduleConflict(newClass);
+
   const createdClass = await scheduleRepository.create(newClass);
 
   await recordScheduleHistory({
@@ -76,6 +117,8 @@ export async function updateSchedule(
     ...input,
     id
   };
+
+  await ensureNoScheduleConflict(updatedClass, id);
 
   const savedClass = await scheduleRepository.update(id, updatedClass);
 

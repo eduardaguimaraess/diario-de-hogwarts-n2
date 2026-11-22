@@ -65,6 +65,8 @@ O script solicita nome, email, perfil, casa e senha. As casas aceitas são Grifi
 
 Alunos podem consultar a grade. Professores podem cadastrar, editar e excluir aulas, consultar o histórico e alterar os pontos das casas na interface. O backend também protege as operações de escrita e o histórico conforme o perfil.
 
+Na criação e edição da grade, o backend impede que um professor ou uma sala apareça em duas aulas no mesmo dia e horário. Esses conflitos retornam HTTP `409` com uma mensagem explicativa.
+
 ## Dados e endpoints principais
 
 - `GET /health`: verifica se o backend está ativo.

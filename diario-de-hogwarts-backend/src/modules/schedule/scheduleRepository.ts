@@ -8,6 +8,45 @@ interface CountRow extends RowDataPacket {
   total: number;
 }
 
+interface ScheduleConflictRow extends RowDataPacket {
+  id: string;
+  professor: string;
+  classroom: string;
+}
+
+type ScheduleConflictInput = Pick<
+  ScheduleClass,
+  'professor' | 'classroom' | 'time' | 'dayOfWeek'
+>;
+
+export async function findConflicts(
+  item: ScheduleConflictInput,
+  excludedId?: string
+): Promise<ScheduleConflictRow[]> {
+  const [rows] = await database.execute<ScheduleConflictRow[]>(
+    `SELECT id, professor, classroom
+     FROM schedule
+     WHERE LOWER(TRIM(dayOfWeek)) = LOWER(TRIM(?))
+       AND LOWER(REPLACE(TRIM(time), ' ', '')) =
+           LOWER(REPLACE(TRIM(?), ' ', ''))
+       AND (? IS NULL OR id <> ?)
+       AND (
+         LOWER(TRIM(professor)) = LOWER(TRIM(?))
+         OR LOWER(TRIM(classroom)) = LOWER(TRIM(?))
+       )`,
+    [
+      item.dayOfWeek,
+      item.time,
+      excludedId ?? null,
+      excludedId ?? null,
+      item.professor,
+      item.classroom
+    ]
+  );
+
+  return rows;
+}
+
 export async function findAll(): Promise<ScheduleClass[]> {
   const [rows] = await database.query<ScheduleRow[]>(
     `SELECT id, subject, professor, classroom, time, dayOfWeek
