@@ -5,10 +5,17 @@ import * as scheduleRepository from './scheduleRepository.js';
 
 export interface ScheduleInput {
   subject: string;
-  professor: string;
+  teacherId: number;
   classroom: string;
   time: string;
   dayOfWeek: string;
+}
+
+export class InvalidScheduleTeacherError extends Error {
+  constructor() {
+    super('Selecione um professor cadastrado com perfil de professor.');
+    this.name = 'InvalidScheduleTeacherError';
+  }
 }
 
 export interface PaginationInput {
@@ -81,12 +88,24 @@ export async function getScheduleById(
   return scheduleRepository.findById(id);
 }
 
+export async function listTeachers() {
+  return scheduleRepository.findTeachers();
+}
+
 export async function createSchedule(
   input: ScheduleInput
 ): Promise<ScheduleClass> {
+  const teacher = await scheduleRepository.findTeacherById(input.teacherId);
+
+  if (!teacher) {
+    throw new InvalidScheduleTeacherError();
+  }
+
   const newClass: ScheduleClass = {
     id: Date.now().toString(),
-    ...input
+    ...input,
+    professor: teacher.name,
+    teacherId: teacher.id
   };
 
   await ensureNoScheduleConflict(newClass);
@@ -112,9 +131,18 @@ export async function updateSchedule(
     return undefined;
   }
 
+  const teacher = input.teacherId === undefined
+    ? undefined
+    : await scheduleRepository.findTeacherById(input.teacherId);
+
+  if (input.teacherId !== undefined && !teacher) {
+    throw new InvalidScheduleTeacherError();
+  }
+
   const updatedClass: ScheduleClass = {
     ...currentClass,
     ...input,
+    ...(teacher ? { professor: teacher.name, teacherId: teacher.id } : {}),
     id
   };
 

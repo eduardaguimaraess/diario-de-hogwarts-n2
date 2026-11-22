@@ -4,6 +4,7 @@ import type {
 } from 'fastify';
 import * as scheduleService from '../schedule/scheduleService.js';
 import { ScheduleConflictError } from '../schedule/scheduleConflictError.js';
+import { InvalidScheduleTeacherError } from '../schedule/scheduleService.js';
 import type {
   PaginationInput,
   ScheduleInput
@@ -19,6 +20,14 @@ export async function list(
 ) {
   const classes = await scheduleService.listSchedule();
   return reply.status(200).send(classes);
+}
+
+export async function listTeachers(
+  _request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const teachers = await scheduleService.listTeachers();
+  return reply.status(200).send({ data: teachers });
 }
 
 export async function listPaginated(
@@ -56,6 +65,10 @@ export async function create(
       return reply.status(409).send({ error: error.message });
     }
 
+    if (error instanceof InvalidScheduleTeacherError) {
+      return reply.status(400).send({ error: error.message });
+    }
+
     throw error;
   }
 }
@@ -79,6 +92,10 @@ export async function update(
   } catch (error) {
     if (error instanceof ScheduleConflictError) {
       return reply.status(409).send({ error: error.message });
+    }
+
+    if (error instanceof InvalidScheduleTeacherError) {
+      return reply.status(400).send({ error: error.message });
     }
 
     throw error;

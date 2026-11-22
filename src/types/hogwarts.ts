@@ -34,6 +34,7 @@ export interface UserProfile {
 
 export interface ScheduleClass {
   id: string;
+  teacherId?: number | null;
   subject: string;
   professor: string;
   classroom: string;

@@ -1,6 +1,7 @@
 // Definimos o formato (tipo) que cada aula deve ter
 export interface ScheduleClass {
     id: string;
+    teacherId?: number | null;
     subject: string;
     professor: string;
     classroom: string;

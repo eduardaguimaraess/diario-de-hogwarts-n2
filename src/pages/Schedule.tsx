@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { getSchedule, createScheduleClass, updateScheduleClass, deleteScheduleClass } from '../services/api';
+import {
+  createScheduleClass,
+  deleteScheduleClass,
+  getSchedule,
+  getScheduleTeachers,
+  updateScheduleClass
+} from '../services/api';
+import type { ScheduleTeacherOption } from '../services/api';
 import type { ScheduleClass } from '../types/hogwarts';
 import { Calendar, Clock, MapPin, User, Plus, Trash2, Edit2, Loader2, AlertTriangle, Sparkles, X, BookOpen, CheckCircle, BookmarkPlus } from 'lucide-react';
 
@@ -8,6 +15,7 @@ export function Schedule() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<string>('Todos');
+  const [teachers, setTeachers] = useState<ScheduleTeacherOption[]>([]);
 
   // Controle de Abas: 'general' (Grade Geral) | 'my-plan' (Meu Plano do Aluno)
   const [activeTab, setActiveTab] = useState<'general' | 'my-plan'>('general');
@@ -23,7 +31,7 @@ export function Schedule() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     subject: '',
-    professor: '',
+    teacherId: '',
     classroom: '',
     time: '',
     dayOfWeek: 'Segunda-feira'
@@ -47,6 +55,9 @@ export function Schedule() {
 
   useEffect(() => {
     loadSchedule();
+    getScheduleTeachers()
+      .then(setTeachers)
+      .catch((err) => setError((err as Error).message));
   }, []);
 
   // Salvar alterações do "Meu Plano" no localStorage sempre que for atualizado
@@ -79,7 +90,7 @@ export function Schedule() {
     setEditingId(null);
     setFormData({
       subject: '',
-      professor: '',
+      teacherId: '',
       classroom: '',
       time: '',
       dayOfWeek: 'Segunda-feira'
@@ -91,7 +102,7 @@ export function Schedule() {
     setEditingId(item.id);
     setFormData({
       subject: item.subject,
-      professor: item.professor,
+      teacherId: item.teacherId ? String(item.teacherId) : '',
       classroom: item.classroom,
       time: item.time,
       dayOfWeek: item.dayOfWeek
@@ -102,10 +113,15 @@ export function Schedule() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const scheduleInput = {
+        ...formData,
+        teacherId: Number(formData.teacherId)
+      };
+
       if (editingId) {
-        await updateScheduleClass(editingId, formData);
+        await updateScheduleClass(editingId, scheduleInput);
       } else {
-        await createScheduleClass(formData);
+        await createScheduleClass(scheduleInput);
       }
       setIsModalOpen(false);
       loadSchedule();
@@ -478,14 +494,21 @@ export function Schedule() {
 
               <div>
                 <label style={{ display: 'block', color: 'var(--color-lavender)', fontSize: '0.8rem', marginBottom: '0.3rem', fontWeight: 600 }}>Professor Responsável</label>
-                <input
-                  type="text"
+                <select
                   required
-                  value={formData.professor}
-                  onChange={(e) => setFormData({ ...formData, professor: e.target.value })}
-                  placeholder="Ex: Prof. Severo Snape"
+                  value={formData.teacherId}
+                  onChange={(e) => setFormData({ ...formData, teacherId: e.target.value })}
                   style={{ width: '100%', padding: '0.6rem', backgroundColor: '#0b162c', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff', fontSize: '0.85rem', boxSizing: 'border-box' }}
-                />
+                >
+                  <option value="" disabled>
+                    {teachers.length > 0 ? 'Selecione um professor' : 'Nenhum professor cadastrado'}
+                  </option>
+                  {teachers.map((teacher) => (
+                    <option key={teacher.id} value={teacher.id}>
+                      {teacher.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
@@ -537,7 +560,8 @@ export function Schedule() {
                 </button>
                 <button
                   type="submit"
-                  style={{ backgroundColor: 'var(--color-blue)', border: 'none', color: '#fff', padding: '0.6rem 1.25rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}
+                  disabled={teachers.length === 0 || !formData.teacherId}
+                  style={{ backgroundColor: 'var(--color-blue)', border: 'none', color: '#fff', padding: '0.6rem 1.25rem', borderRadius: '6px', cursor: teachers.length === 0 || !formData.teacherId ? 'not-allowed' : 'pointer', opacity: teachers.length === 0 || !formData.teacherId ? 0.6 : 1, fontSize: '0.85rem', fontWeight: 600 }}
                 >
                   {editingId ? 'Salvar Alterações' : 'Confirmar Cadastro'}
                 </button>

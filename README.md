@@ -32,6 +32,8 @@ node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
 
 Use o resultado como valor de `SESSION_KEY`. Na URI do MongoDB, substitua usuário, senha e endereço do cluster pelos valores da sua conta. Se a senha tiver caracteres especiais, codifique-os para URL.
 
+Se o banco já existia antes do vínculo entre aulas e professores, execute uma única vez `diario-de-hogwarts-backend/src/database/migrations/001_schedule_teacher_fk.sql` no MySQL Workbench. Essa migração adiciona o vínculo sem alterar as aulas existentes; elas continuam exibindo o nome de professor que já tinham.
+
 ## Executar localmente
 
 Abra dois terminais na pasta do projeto.
@@ -69,14 +71,23 @@ Alunos podem consultar a grade. Professores podem cadastrar, editar e excluir au
 
 Na criação e edição da grade, o backend impede que um professor ou uma sala apareça em duas aulas no mesmo dia e horário. Esses conflitos retornam HTTP `409` com uma mensagem explicativa.
 
+O cadastro de alunos e professores é centralizado na tabela `users`, diferenciada pelo campo `role`. Ao cadastrar ou editar uma aula, o formulário carrega somente usuários com perfil `teacher`; o vínculo é salvo em `schedule.teacher_id`. Aulas antigas ficam sem vínculo até serem editadas e receberem um professor pelo select.
+
 ## Dados e endpoints principais
 
 - `GET /health`: verifica se o backend está ativo.
 - `POST /auth/login`, `GET /auth/me` e `POST /auth/logout`: autenticação por sessão.
 - `GET /schedule/paginated?page=1&limit=5&search=Poções`: consulta paginada e filtrada da grade.
+- `GET /schedule/teachers`: lista de professores cadastrados, disponível para professores autenticados.
 - `GET /schedule/history`: histórico de criação, edição e exclusão armazenado no MongoDB; acesso de professor.
 
 O histórico guarda a ação, o horário e uma cópia dos dados da aula no momento da alteração.
+
+## Evidências da N2
+
+As capturas dos fluxos principais estão em `evidencias/`: painéis de professor e aluno, select de professor no cadastro, aula na grade, persistência no MySQL, exclusão, histórico no MongoDB, busca paginada e conflito HTTP `409`.
+
+Para atender à evidência de desempenho do enunciado, falta registrar uma captura da aba Network com uma requisição paginada selecionada e a duração visível. A captura `09-network-busca-200.png` registra método, URL e status `200`; complemente-a com a aba **Timing** ou com a coluna **Duration** visível.
 
 ## Organização principal
 

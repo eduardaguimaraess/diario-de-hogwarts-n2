@@ -4,21 +4,27 @@ CREATE DATABASE IF NOT EXISTS diario_hogwarts
 
 USE diario_hogwarts;
 
-CREATE TABLE IF NOT EXISTS schedule (
-  id VARCHAR(30) PRIMARY KEY,
-  subject VARCHAR(100) NOT NULL,
-  professor VARCHAR(100) NOT NULL,
-  classroom VARCHAR(100) NOT NULL,
-  time VARCHAR(30) NOT NULL,
-  dayOfWeek VARCHAR(30) NOT NULL
-);
-
 CREATE TABLE IF NOT EXISTS users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   email VARCHAR(255) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
   role ENUM('student', 'teacher') NOT NULL,
   house ENUM('Grifinória', 'Sonserina', 'Corvinal', 'Lufa-Lufa') NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS schedule (
+  id VARCHAR(30) PRIMARY KEY,
+  subject VARCHAR(100) NOT NULL,
+  professor VARCHAR(100) NOT NULL,
+  teacher_id BIGINT UNSIGNED NULL,
+  classroom VARCHAR(100) NOT NULL,
+  time VARCHAR(30) NOT NULL,
+  dayOfWeek VARCHAR(30) NOT NULL,
+  INDEX idx_schedule_teacher_id (teacher_id),
+  CONSTRAINT fk_schedule_teacher
+    FOREIGN KEY (teacher_id) REFERENCES users(id)
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
 );

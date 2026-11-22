@@ -1,11 +1,29 @@
+const scheduleIdParams = {
+  type: 'object',
+  required: ['id'],
+  additionalProperties: false,
+  properties: {
+    id: {
+      type: 'string',
+      minLength: 1,
+      maxLength: 30,
+      pattern: '^[0-9]+$'
+    }
+  }
+} as const;
+
+export const scheduleParamsSchema = {
+  params: scheduleIdParams
+} as const;
+
 export const createScheduleSchema = {
   body: {
     type: 'object',
-    required: ['subject', 'professor', 'classroom', 'time', 'dayOfWeek'],
+    required: ['subject', 'teacherId', 'classroom', 'time', 'dayOfWeek'],
     additionalProperties: false,
     properties: {
       subject: { type: 'string', minLength: 1, maxLength: 100 },
-      professor: { type: 'string', minLength: 1, maxLength: 100 },
+      teacherId: { type: 'integer', minimum: 1 },
       classroom: { type: 'string', minLength: 1, maxLength: 100 },
       time: { type: 'string', minLength: 1, maxLength: 30 },
       dayOfWeek: { type: 'string', minLength: 1, maxLength: 30 }
@@ -20,12 +38,17 @@ export const updateScheduleSchema = {
     additionalProperties: false,
     properties: {
       subject: { type: 'string', minLength: 1, maxLength: 100 },
-      professor: { type: 'string', minLength: 1, maxLength: 100 },
+      teacherId: { type: 'integer', minimum: 1 },
       classroom: { type: 'string', minLength: 1, maxLength: 100 },
       time: { type: 'string', minLength: 1, maxLength: 30 },
       dayOfWeek: { type: 'string', minLength: 1, maxLength: 30 }
     }
   }
+} as const;
+
+export const updateScheduleRouteSchema = {
+  params: scheduleIdParams,
+  body: updateScheduleSchema.body
 } as const;
 
 export const paginationSchema = {

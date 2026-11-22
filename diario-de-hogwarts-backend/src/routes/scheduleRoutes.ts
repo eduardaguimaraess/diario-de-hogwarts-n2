@@ -11,7 +11,8 @@ import type {
 import {
   createScheduleSchema,
   paginationSchema,
-  updateScheduleSchema
+  scheduleParamsSchema,
+  updateScheduleRouteSchema
 } from '../modules/schedule/scheduleSchemas.js';
 
 interface ScheduleParams {
@@ -19,6 +20,12 @@ interface ScheduleParams {
 }
 
 export async function scheduleRoutes(fastify: FastifyInstance) {
+  fastify.get(
+    '/schedule/teachers',
+    { preHandler: requireTeacher },
+    scheduleController.listTeachers
+  );
+
   fastify.get(
     '/schedule',
     { preHandler: requireAuthentication },
@@ -36,7 +43,10 @@ export async function scheduleRoutes(fastify: FastifyInstance) {
 
   fastify.get<{ Params: ScheduleParams }>(
     '/schedule/:id',
-    { preHandler: requireAuthentication },
+    {
+      schema: scheduleParamsSchema,
+      preHandler: requireAuthentication
+    },
     scheduleController.getById
   );
 
@@ -55,7 +65,7 @@ export async function scheduleRoutes(fastify: FastifyInstance) {
   }>(
     '/schedule/:id',
     {
-      schema: updateScheduleSchema,
+      schema: updateScheduleRouteSchema,
       preHandler: requireTeacher
     },
     scheduleController.update
@@ -63,7 +73,10 @@ export async function scheduleRoutes(fastify: FastifyInstance) {
 
   fastify.delete<{ Params: ScheduleParams }>(
     '/schedule/:id',
-    { preHandler: requireTeacher },
+    {
+      schema: scheduleParamsSchema,
+      preHandler: requireTeacher
+    },
     scheduleController.remove
   );
 }
