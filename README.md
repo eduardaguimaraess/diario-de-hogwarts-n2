@@ -55,7 +55,9 @@ O backend inicia em `http://localhost:3333` e o frontend em `http://localhost:51
 
 ## Contas de acesso
 
-As senhas são armazenadas com hash Argon2. Para cadastrar um aluno ou professor, execute na pasta `diario-de-hogwarts-backend`:
+As senhas são armazenadas com hash Argon2. O login é feito na página inicial; o sistema identifica o perfil da conta após a autenticação. Depois de entrar, professores têm acesso ao menu **Cadastrar usuários**, que permite criar contas de alunos e professores. Essa rota também é protegida no backend: alunos recebem `403` se tentarem acessá-la diretamente.
+
+Para criar o primeiro professor, antes de haver uma conta habilitada a usar o formulário, execute o script inicial na pasta `diario-de-hogwarts-backend`:
 
 ```bash
 npx tsx src/scripts/createUser.ts

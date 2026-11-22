@@ -13,6 +13,12 @@ export interface LoginCredentials {
     password: string;
 }
 
+export interface CreateAccountInput extends LoginCredentials {
+    name: string;
+    role: UserRole;
+    house: string;
+}
+
 const BACKEND_URL = 'http://localhost:3333';
 
 interface AuthResponse {
@@ -77,4 +83,26 @@ export async function logoutRequest(): Promise<void> {
     if (!response.ok) {
         throw new Error('Não foi possível encerrar a sessão.');
     }
+}
+
+export async function createAccountRequest(
+    input: CreateAccountInput
+): Promise<AuthenticatedUser> {
+    const response = await fetch(`${BACKEND_URL}/auth/users`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(input)
+    });
+
+    if (!response.ok) {
+        throw new Error(
+            await getErrorMessage(response, 'Não foi possível cadastrar a conta.')
+        );
+    }
+
+    const result = (await response.json()) as AuthResponse;
+    return result.user;
 }

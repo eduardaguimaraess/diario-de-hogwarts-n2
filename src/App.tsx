@@ -17,6 +17,7 @@ import { SchedulePaginated } from './pages/SchedulePaginated';
 import { ScheduleStudent } from './pages/ScheduleStudent';
 import { SpellDetail } from './pages/SpellDetail';
 import { Spells } from './pages/Spells';
+import { UserRegistration } from './pages/UserRegistration';
 
 function RequireAuthentication({ children }: PropsWithChildren) {
   const { user, loading } = useAuth();
@@ -144,6 +145,14 @@ export function App() {
             element={
               <RequireTeacher>
                 <ScheduleHistory />
+              </RequireTeacher>
+            }
+          />
+          <Route
+            path="/users/new"
+            element={
+              <RequireTeacher>
+                <UserRegistration />
               </RequireTeacher>
             }
           />

@@ -5,8 +5,13 @@ import type {
 import * as authService from './authService.js';
 import type {
     AuthenticatedUser,
-    LoginInput
+    LoginInput,
+    RegisterUserInput
 } from './authTypes.js';
+import {
+    AccountConflictError,
+    AccountInputError
+} from './authErrors.js';
 
 export async function login(
     request: FastifyRequest<{ Body: LoginInput }>,
@@ -49,4 +54,24 @@ export async function logout(
 ) {
     request.session.delete();
     return reply.status(204).send();
+}
+
+export async function registerUser(
+    request: FastifyRequest<{ Body: RegisterUserInput }>,
+    reply: FastifyReply
+) {
+    try {
+        const user = await authService.registerUser(request.body);
+        return reply.status(201).send({ user });
+    } catch (error) {
+        if (error instanceof AccountConflictError) {
+            return reply.status(409).send({ error: error.message });
+        }
+
+        if (error instanceof AccountInputError) {
+            return reply.status(400).send({ error: error.message });
+        }
+
+        throw error;
+    }
 }

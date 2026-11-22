@@ -89,7 +89,7 @@ export function Login() {
         </h1>
 
         <p style={{ color: 'var(--color-lavender)', fontSize: '0.85rem' }}>
-          Entre com uma conta previamente cadastrada.
+          Alunos e professores entram com e-mail e senha. O sistema identifica seu perfil automaticamente. Para criar uma conta, procure um professor.
         </p>
       </header>
 

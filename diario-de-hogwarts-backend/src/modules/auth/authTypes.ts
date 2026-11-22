@@ -1,4 +1,9 @@
 export type UserRole = 'student' | 'teacher';
+export type HogwartsHouse =
+  | 'Grifinória'
+  | 'Sonserina'
+  | 'Corvinal'
+  | 'Lufa-Lufa';
 
 export interface AuthenticatedUser {
   id: number;
@@ -11,4 +16,12 @@ export interface AuthenticatedUser {
 export interface LoginInput {
   email: string;
   password: string;
+}
+
+export interface RegisterUserInput {
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
+  house: HogwartsHouse;
 }

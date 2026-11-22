@@ -8,7 +8,8 @@ import {
   Home,
   LogOut,
   Search,
-  Shield
+  Shield,
+  UserPlus
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -140,6 +141,13 @@ export function Navbar() {
           >
             <History size={16} />
             Histórico
+          </Link>
+        )}
+
+        {user.role === 'teacher' && (
+          <Link to="/users/new" style={linkStyle('/users/new')}>
+            <UserPlus size={16} />
+            Cadastrar usuários
           </Link>
         )}
       </nav>
