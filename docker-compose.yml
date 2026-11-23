@@ -17,8 +17,8 @@ services:
       NODE_ENV: development
       DB_HOST: mysql
       DB_PORT: "3306"
-      DB_USER: root
-      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Defina MYSQL_ROOT_PASSWORD no arquivo .env}
+      DB_USER: hogwarts_app
+      DB_PASSWORD: ${DB_APP_PASSWORD:?Defina DB_APP_PASSWORD no arquivo .env}
       DB_NAME: diario_hogwarts
       MONGODB_URI: mongodb://mongodb:27017
       MONGODB_DB_NAME: diario_hogwarts
@@ -38,8 +38,10 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Defina MYSQL_ROOT_PASSWORD no arquivo .env}
       MYSQL_DATABASE: diario_hogwarts
+      MYSQL_USER: hogwarts_app
+      MYSQL_PASSWORD: ${DB_APP_PASSWORD:?Defina DB_APP_PASSWORD no arquivo .env}
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mysql_data_app:/var/lib/mysql
     healthcheck:
       test:
         [
@@ -70,5 +72,5 @@ services:
       start_period: 10s
 
 volumes:
-  mysql_data:
+  mysql_data_app:
   mongo_data:
