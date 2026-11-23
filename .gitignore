@@ -21,6 +21,9 @@ node_modules/
 jspm_packages/
 web_modules/
 
+# Pasta com o PDF
+materiais
+
 # Arquivos gerados pelo TypeScript
 *.tsbuildinfo
 
